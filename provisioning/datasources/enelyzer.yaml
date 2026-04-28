@@ -1,0 +1,14 @@
+apiVersion: 1
+
+datasources:
+  - name: Enelyzer
+    type: enprove-enelyzer-datasource
+    access: proxy
+    isDefault: true
+    jsonData:
+      energyEfficiencyBaseUrl: http://host.docker.internal:8081
+      assetBaseUrl: http://host.docker.internal:8082
+      co2BaseUrl: http://host.docker.internal:8083
+      authType: bearer
+    secureJsonData:
+      apiToken: your-api-token-here
