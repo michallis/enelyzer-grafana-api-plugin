@@ -1,0 +1,58 @@
+{
+  "type": "datasource",
+  "name": "Enelyzer",
+  "id": "enprove-enelyzer-datasource",
+  "info": {
+    "description": "Pre-configured datasource for Enelyzer APIs: Energy Efficiency, Asset Management, and CO2 services. Endpoints are pre-registered with human-readable aliases — no API knowledge required.",
+    "author": {
+      "name": "Enprove",
+      "url": "https://enelyzer.com"
+    },
+    "keywords": ["enelyzer", "energy", "efficiency", "co2", "assets", "enprove"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "2024-01-01"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=10.0.0",
+    "grafanaVersion": "10.0.0"
+  },
+  "routes": [
+    {
+      "path": "energy",
+      "url": "{{ .JsonData.energyEfficiencyBaseUrl }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Bearer {{ .SecureJsonData.apiToken }}"
+        }
+      ]
+    },
+    {
+      "path": "asset",
+      "url": "{{ .JsonData.assetBaseUrl }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Bearer {{ .SecureJsonData.apiToken }}"
+        }
+      ]
+    },
+    {
+      "path": "co2",
+      "url": "{{ .JsonData.co2BaseUrl }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Bearer {{ .SecureJsonData.apiToken }}"
+        }
+      ]
+    }
+  ],
+  "backend": false
+}
