@@ -1,9 +1,14 @@
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import path from 'path';
+import { fileURLToPath } from 'url';
 // @ts-ignore — replace-in-file-webpack-plugin ships no types and has no @types package
 import ReplaceInFileWebpackPlugin from 'replace-in-file-webpack-plugin';
 import { Configuration } from 'webpack';
+
+// ESM does not provide __dirname — derive it from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const SOURCE_DIR = path.resolve(__dirname, '../../src');
 const DIST_DIR = path.resolve(__dirname, '../../dist');
@@ -84,18 +89,14 @@ export default async (env: WebpackEnv): Promise<Configuration> => {
           test: /\.(png|jpe?g|gif|svg)$/,
           type: 'asset/resource',
           generator: {
-            filename: Boolean(env.production)
-              ? '[file]'
-              : '[path][name].[ext]',
+            filename: Boolean(env.production) ? '[file]' : '[path][name].[ext]',
           },
         },
         {
           test: /\.(woff|woff2|eot|ttf|otf)(\?v=\d+\.\d+\.\d+)?$/,
           type: 'asset/resource',
           generator: {
-            filename: Boolean(env.production)
-              ? '[file]'
-              : '[path][name].[ext]',
+            filename: Boolean(env.production) ? '[file]' : '[path][name].[ext]',
           },
         },
       ],
