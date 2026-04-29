@@ -1,14 +1,9 @@
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import path from 'path';
-import { Configuration, Compiler } from 'webpack';
-
-// replace-in-file-webpack-plugin ships no @types package — use require with an inline type
-type ReplaceRule = { search: string | RegExp; replace: string };
-type ReplacePluginOpts = { dir: string; files?: string[]; rules: ReplaceRule[] };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReplaceInFileWebpackPlugin: new (opts: ReplacePluginOpts[]) => { apply(c: Compiler): void } =
-  require('replace-in-file-webpack-plugin');
+// @ts-ignore — replace-in-file-webpack-plugin ships no types and has no @types package
+import ReplaceInFileWebpackPlugin from 'replace-in-file-webpack-plugin';
+import { Configuration } from 'webpack';
 
 const SOURCE_DIR = path.resolve(__dirname, '../../src');
 const DIST_DIR = path.resolve(__dirname, '../../dist');
