@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { Field, Input, SecretInput, Select, FieldSet } from '@grafana/ui';
+import { Field, Input, SecretInput, Select, FieldSet, Switch, InlineField } from '@grafana/ui';
 import { EnelyzerDataSourceOptions, EnelyzerSecureJsonData } from './types';
 
 type Props = DataSourcePluginOptionsEditorProps<EnelyzerDataSourceOptions, EnelyzerSecureJsonData>;
@@ -29,6 +29,13 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
     });
   };
 
+  const onOAuthPassThruChange = (e: React.FormEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: { ...jsonData, oauthPassThru: (e.target as HTMLInputElement).checked },
+    });
+  };
+
   const onSecureChange = (key: keyof EnelyzerSecureJsonData) => (e: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({
       ...options,
@@ -43,6 +50,8 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
       secureJsonData: { ...secureJsonData, [key]: '' },
     });
   };
+
+  const oauthPassThru = Boolean(jsonData.oauthPassThru);
 
   return (
     <div>
@@ -85,7 +94,27 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
       </FieldSet>
 
       <FieldSet label="Authentication">
-        <Field label="Auth Type">
+        <Field
+          label="Forward logged-in user token"
+          description={
+            oauthPassThru
+              ? 'The logged-in user\'s bearer token is forwarded to all Enelyzer services. The static token below is ignored when a user token is present, and used only as a fallback.'
+              : 'Enable to forward the Grafana user\'s OAuth/OIDC bearer token to Enelyzer services instead of the static token. Requires Grafana to be configured with OAuth2 or OIDC login.'
+          }
+        >
+          <InlineField label="Enabled" transparent>
+            <Switch value={oauthPassThru} onChange={onOAuthPassThruChange} />
+          </InlineField>
+        </Field>
+
+        <Field
+          label="Fallback Auth Type"
+          description={
+            oauthPassThru
+              ? 'Used only when no user token is available (e.g. alerting, background queries).'
+              : 'Authentication method used for all requests.'
+          }
+        >
           <Select
             width={30}
             options={AUTH_OPTIONS}
@@ -95,7 +124,14 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
         </Field>
 
         {(jsonData.authType === 'bearer' || !jsonData.authType) && (
-          <Field label="Bearer Token" description="Token sent as 'Authorization: Bearer <token>' on all requests.">
+          <Field
+            label={oauthPassThru ? 'Fallback Bearer Token' : 'Bearer Token'}
+            description={
+              oauthPassThru
+                ? 'Used as Authorization header only when the user has no forwarded token (e.g. alerting rules, server-side rendering).'
+                : "Token sent as 'Authorization: Bearer <token>' on all requests."
+            }
+          >
             <SecretInput
               width={60}
               placeholder="Enter bearer token"
@@ -109,7 +145,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         {jsonData.authType === 'basic' && (
           <>
-            <Field label="Username">
+            <Field label={oauthPassThru ? 'Fallback Username' : 'Username'}>
               <SecretInput
                 width={30}
                 placeholder="username"
@@ -119,7 +155,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
                 onReset={onSecureReset('basicUser')}
               />
             </Field>
-            <Field label="Password">
+            <Field label={oauthPassThru ? 'Fallback Password' : 'Password'}>
               <SecretInput
                 width={30}
                 placeholder="password"
