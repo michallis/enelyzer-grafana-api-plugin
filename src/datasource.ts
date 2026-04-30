@@ -1,17 +1,19 @@
 import {
-  DataFrameView,
   DataQueryRequest,
   DataQueryResponse,
   DataSourceApi,
   DataSourceInstanceSettings,
   MutableDataFrame,
   FieldType,
-  ArrayVector,
 } from '@grafana/data';
 import { getBackendSrv, getTemplateSrv } from '@grafana/runtime';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import { defaultQuery, EnelyzerDataSourceOptions, EnelyzerQuery, KeyValuePair } from './types';
-import { getEndpointById, ENDPOINTS } from './endpoints';
+import { getEndpointById } from './endpoints';
+
+interface FetchResult {
+  data: unknown;
+}
 
 export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDataSourceOptions> {
   private energyEfficiencyBaseUrl: string;
@@ -23,17 +25,6 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
     this.energyEfficiencyBaseUrl = instanceSettings.jsonData.energyEfficiencyBaseUrl || '';
     this.assetBaseUrl = instanceSettings.jsonData.assetBaseUrl || '';
     this.co2BaseUrl = instanceSettings.jsonData.co2BaseUrl || '';
-  }
-
-  private getServiceBaseUrl(service: 'energy-efficiency' | 'asset' | 'co2'): string {
-    switch (service) {
-      case 'energy-efficiency':
-        return this.energyEfficiencyBaseUrl;
-      case 'asset':
-        return this.assetBaseUrl;
-      case 'co2':
-        return this.co2BaseUrl;
-    }
   }
 
   private getProxyRouteName(service: 'energy-efficiency' | 'asset' | 'co2'): string {
@@ -135,7 +126,8 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
           {
             name: alias || 'value',
             type: FieldType.string,
-            values: new ArrayVector(data.map(String)),
+            // MutableDataFrame accepts plain arrays directly — no ArrayVector needed
+            values: data.map(String),
           },
         ],
       });
@@ -170,6 +162,12 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
     return frame;
   }
 
+  // @grafana/data bundles its own rxjs which produces a different Observable type
+  // than the top-level rxjs package. Cast through unknown to bridge the two.
+  private fetch(options: Parameters<ReturnType<typeof getBackendSrv>['fetch']>[0]): Observable<FetchResult> {
+    return getBackendSrv().fetch(options) as unknown as Observable<FetchResult>;
+  }
+
   async query(options: DataQueryRequest<EnelyzerQuery>): Promise<DataQueryResponse> {
     const frames = await Promise.all(
       options.targets
@@ -189,7 +187,7 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
           const body = this.buildBody(query.bodyParams, query.bodyRaw, query.useRawBody);
 
           const response = await lastValueFrom(
-            getBackendSrv().fetch({
+            this.fetch({
               url,
               method: endpoint.method,
               data: body,
@@ -227,9 +225,7 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
 
     for (const check of checks) {
       try {
-        await lastValueFrom(
-          getBackendSrv().fetch({ url: check.url, method: 'GET' })
-        );
+        await lastValueFrom(this.fetch({ url: check.url, method: 'GET' }));
         results.push(`✓ ${check.name}`);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
