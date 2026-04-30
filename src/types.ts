@@ -35,6 +35,12 @@ export interface EnelyzerDataSourceOptions extends DataSourceJsonData {
   assetBaseUrl: string;
   co2BaseUrl: string;
   authType: 'bearer' | 'basic' | 'none';
+  /**
+   * When true, Grafana's data source proxy forwards the logged-in user's
+   * OAuth/OIDC bearer token to the backend, overriding the static apiToken.
+   * This is the standard Grafana field name recognised by the proxy.
+   */
+  oauthPassThru: boolean;
 }
 
 export interface EnelyzerSecureJsonData {
