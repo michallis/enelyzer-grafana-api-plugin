@@ -16,15 +16,8 @@ interface FetchResult {
 }
 
 export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDataSourceOptions> {
-  private energyEfficiencyBaseUrl: string;
-  private assetBaseUrl: string;
-  private co2BaseUrl: string;
-
   constructor(instanceSettings: DataSourceInstanceSettings<EnelyzerDataSourceOptions>) {
     super(instanceSettings);
-    this.energyEfficiencyBaseUrl = instanceSettings.jsonData.energyEfficiencyBaseUrl || '';
-    this.assetBaseUrl = instanceSettings.jsonData.assetBaseUrl || '';
-    this.co2BaseUrl = instanceSettings.jsonData.co2BaseUrl || '';
   }
 
   private getProxyRouteName(service: 'energy-efficiency' | 'asset' | 'co2'): string {
