@@ -34,6 +34,8 @@ export interface EnelyzerDataSourceOptions extends DataSourceJsonData {
   energyEfficiencyBaseUrl: string;
   assetBaseUrl: string;
   co2BaseUrl: string;
+  aclBaseUrl: string;
+  graphBaseUrl: string;
   authType: 'bearer' | 'basic' | 'none';
   /**
    * When true, Grafana's data source proxy forwards the logged-in user's
@@ -61,7 +63,7 @@ export interface EndpointParam {
 
 export interface EndpointDefinition {
   id: string;
-  service: 'energy-efficiency' | 'asset' | 'co2';
+  service: 'energy-efficiency' | 'asset' | 'co2' | 'acl' | 'graph';
   alias: string;
   description: string;
   method: HttpMethod;
