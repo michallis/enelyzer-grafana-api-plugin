@@ -58,11 +58,11 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
       <FieldSet label="Service Base URLs">
         <Field
           label="Energy Efficiency Service"
-          description="Base URL of the enelyzer-energy-efficiency-service (e.g. https://energy.enelyzer.example.com)"
+          description="Base URL of enelyzer-energy-efficiency-service (e.g. http://enelyzer-energy-efficiency-service.enelyzer.svc.cluster.local)"
         >
           <Input
-            width={60}
-            placeholder="https://energy.enelyzer.example.com"
+            width={70}
+            placeholder="http://enelyzer-energy-efficiency-service.enelyzer.svc.cluster.local"
             value={jsonData.energyEfficiencyBaseUrl || ''}
             onChange={onJsonDataChange('energyEfficiencyBaseUrl')}
           />
@@ -70,11 +70,11 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="Asset Service"
-          description="Base URL of the enelyzer-asset-service (e.g. https://asset.enelyzer.example.com)"
+          description="Base URL of enelyzer-asset-service (e.g. http://enelyzer-asset-service.enelyzer.svc.cluster.local)"
         >
           <Input
-            width={60}
-            placeholder="https://asset.enelyzer.example.com"
+            width={70}
+            placeholder="http://enelyzer-asset-service.enelyzer.svc.cluster.local"
             value={jsonData.assetBaseUrl || ''}
             onChange={onJsonDataChange('assetBaseUrl')}
           />
@@ -82,13 +82,37 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="CO2 Service"
-          description="Base URL of the enelyzer-co2-service (e.g. https://co2.enelyzer.example.com)"
+          description="Base URL of enelyzer-co2-service (e.g. http://enelyzer-co2-service.enelyzer.svc.cluster.local)"
         >
           <Input
-            width={60}
-            placeholder="https://co2.enelyzer.example.com"
+            width={70}
+            placeholder="http://enelyzer-co2-service.enelyzer.svc.cluster.local"
             value={jsonData.co2BaseUrl || ''}
             onChange={onJsonDataChange('co2BaseUrl')}
+          />
+        </Field>
+
+        <Field
+          label="ACL / Formula Service"
+          description="Base URL of enelyzer-grafana-acl-service (e.g. http://enelyzer-grafana-acl-service.enelyzer.svc.cluster.local)"
+        >
+          <Input
+            width={70}
+            placeholder="http://enelyzer-grafana-acl-service.enelyzer.svc.cluster.local"
+            value={jsonData.aclBaseUrl || ''}
+            onChange={onJsonDataChange('aclBaseUrl')}
+          />
+        </Field>
+
+        <Field
+          label="Graph Service"
+          description="Base URL of enelyzer-rust-graph-service (e.g. http://enelyzer-rust-graph-service.enelyzer.svc.cluster.local)"
+        >
+          <Input
+            width={70}
+            placeholder="http://enelyzer-rust-graph-service.enelyzer.svc.cluster.local"
+            value={jsonData.graphBaseUrl || ''}
+            onChange={onJsonDataChange('graphBaseUrl')}
           />
         </Field>
       </FieldSet>
@@ -98,8 +122,8 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
           label="Forward logged-in user token"
           description={
             oauthPassThru
-              ? 'The logged-in user\'s bearer token is forwarded to all Enelyzer services. The static token below is ignored when a user token is present, and used only as a fallback.'
-              : 'Enable to forward the Grafana user\'s OAuth/OIDC bearer token to Enelyzer services instead of the static token. Requires Grafana to be configured with OAuth2 or OIDC login.'
+              ? "The logged-in user's bearer token is forwarded to all Enelyzer services. The static token below is used only as a fallback (e.g. alerting, background queries)."
+              : "Enable to forward the Grafana user's OAuth/OIDC bearer token to Enelyzer services. The organisation_id in endpoint paths is derived from the JWT 'organisations' array. Requires Grafana to be configured with OAuth2 or OIDC login."
           }
         >
           <InlineField label="Enabled" transparent>
@@ -128,7 +152,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
             label={oauthPassThru ? 'Fallback Bearer Token' : 'Bearer Token'}
             description={
               oauthPassThru
-                ? 'Used as Authorization header only when the user has no forwarded token (e.g. alerting rules, server-side rendering).'
+                ? 'Used as Authorization header only when no forwarded user token is present.'
                 : "Token sent as 'Authorization: Bearer <token>' on all requests."
             }
           >
