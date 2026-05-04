@@ -20,7 +20,7 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
     super(instanceSettings);
   }
 
-  private getProxyRouteName(service: 'energy-efficiency' | 'asset' | 'co2'): string {
+  private getProxyRouteName(service: 'energy-efficiency' | 'asset' | 'co2' | 'acl' | 'graph'): string {
     switch (service) {
       case 'energy-efficiency':
         return 'energy';
@@ -28,6 +28,10 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
         return 'asset';
       case 'co2':
         return 'co2';
+      case 'acl':
+        return 'acl';
+      case 'graph':
+        return 'graph';
     }
   }
 
