@@ -3,12 +3,12 @@
   "name": "Enelyzer",
   "id": "enprove-enelyzer-datasource",
   "info": {
-    "description": "Pre-configured datasource for Enelyzer APIs: Energy Efficiency, Asset Management, and CO2 services. Endpoints are pre-registered with human-readable aliases — no API knowledge required.",
+    "description": "Pre-configured datasource for Enelyzer APIs: Energy Efficiency, Asset Management, CO2, ACL, and Graph services. Endpoints are pre-registered with human-readable aliases — no API knowledge required.",
     "author": {
       "name": "Enprove",
       "url": "https://enelyzer.com"
     },
-    "keywords": ["enelyzer", "energy", "efficiency", "co2", "assets", "enprove"],
+    "keywords": ["enelyzer", "energy", "efficiency", "co2", "assets", "enprove", "acl", "graph"],
     "logos": {
       "small": "img/logo_icon.svg",
       "large": "img/logo.svg"
@@ -46,6 +46,26 @@
     {
       "path": "co2",
       "url": "{{ .JsonData.co2BaseUrl }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Bearer {{ .SecureJsonData.apiToken }}"
+        }
+      ]
+    },
+    {
+      "path": "acl",
+      "url": "{{ .JsonData.aclBaseUrl }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Bearer {{ .SecureJsonData.apiToken }}"
+        }
+      ]
+    },
+    {
+      "path": "graph",
+      "url": "{{ .JsonData.graphBaseUrl }}",
       "headers": [
         {
           "name": "Authorization",
