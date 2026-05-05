@@ -242,13 +242,30 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
   }
 
   async testDatasource(): Promise<{ status: string; message: string }> {
-    // Each check hits a lightweight endpoint. A 200, 401, or 403 all mean the
-    // proxy reached the backend — only network-level failures (502, 503, ECONNREFUSED)
-    // indicate the base URL is wrong. We treat anything reachable as a pass.
+    // Guard: warn immediately if any base URL is not configured.
+    // When a URL template renders to empty, Grafana proxies to bare "http://"
+    // which looks like a connection error rather than a misconfiguration.
+    const jd = this.instanceSettings.jsonData as EnelyzerDataSourceOptions;
+    const missingUrls: string[] = [];
+    if (!jd.energyEfficiencyBaseUrl) { missingUrls.push('Energy Efficiency'); }
+    if (!jd.assetBaseUrl)             { missingUrls.push('Asset'); }
+    if (!jd.co2BaseUrl)               { missingUrls.push('CO2'); }
+    if (!jd.aclBaseUrl)               { missingUrls.push('ACL / Formula'); }
+    if (!jd.graphBaseUrl)             { missingUrls.push('Graph'); }
+    if (missingUrls.length > 0) {
+      return {
+        status: 'error',
+        message: `Missing base URL(s): ${missingUrls.join(', ')}. Open the datasource config and fill in all five service URLs.`,
+      };
+    }
+
+    // Each check hits a lightweight endpoint. A 200, 401, 403, 404, or 405 all
+    // mean the proxy reached the backend — only network-level failures (502, 503,
+    // ECONNREFUSED, status 0) indicate the base URL is unreachable.
     const checks = [
       {
         name: 'Energy Efficiency',
-        // Search endpoint — cheap, no org_id needed, returns quickly
+        // POST to query endpoint — no body needed, returns 400/422 not 404
         url: `api/datasources/proxy/${this.id}/energy/v1/entries/query/energy`,
         method: 'POST' as const,
         data: {},
@@ -260,7 +277,8 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
       },
       {
         name: 'CO2',
-        url: `api/datasources/proxy/${this.id}/co2/api/v1/emissions`,
+        // /v1/emissions — note: no /api/ prefix on this service
+        url: `api/datasources/proxy/${this.id}/co2/v1/emissions`,
         method: 'GET' as const,
       },
     ];
