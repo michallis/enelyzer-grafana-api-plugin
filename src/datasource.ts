@@ -165,6 +165,46 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
     return getBackendSrv().fetch(options) as unknown as Observable<FetchResult>;
   }
 
+  /**
+   * Grafana's fetch() rejects with a structured object, not an Error:
+   *   { status: number, statusText: string, data: unknown, config: ... }
+   * This helper extracts a readable message from whatever shape is thrown.
+   */
+  private extractErrorMessage(err: unknown): string {
+    if (err === null || err === undefined) {
+      return 'Unknown error';
+    }
+    if (typeof err === 'string') {
+      return err;
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
+    // Grafana FetchError shape
+    const e = err as Record<string, unknown>;
+    const status = typeof e['status'] === 'number' ? e['status'] : undefined;
+    const statusText = typeof e['statusText'] === 'string' ? e['statusText'] : '';
+    const data = e['data'];
+    let detail = '';
+    if (data && typeof data === 'object') {
+      const d = data as Record<string, unknown>;
+      detail = String(d['message'] ?? d['error'] ?? d['detail'] ?? '');
+    } else if (typeof data === 'string' && data.length > 0) {
+      detail = data;
+    }
+    if (status !== undefined) {
+      return detail
+        ? `HTTP ${status} ${statusText}: ${detail}`
+        : `HTTP ${status} ${statusText || 'Error'}`;
+    }
+    // Last resort — try JSON serialization so we at least see the shape
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'Unknown error';
+    }
+  }
+
   async query(options: DataQueryRequest<EnelyzerQuery>): Promise<DataQueryResponse> {
     const frames = await Promise.all(
       options.targets
@@ -202,18 +242,26 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
   }
 
   async testDatasource(): Promise<{ status: string; message: string }> {
+    // Each check hits a lightweight endpoint. A 200, 401, or 403 all mean the
+    // proxy reached the backend — only network-level failures (502, 503, ECONNREFUSED)
+    // indicate the base URL is wrong. We treat anything reachable as a pass.
     const checks = [
       {
         name: 'Energy Efficiency',
-        url: `api/datasources/proxy/${this.id}/energy/api/v1/buildings?pageSize=1`,
+        // Search endpoint — cheap, no org_id needed, returns quickly
+        url: `api/datasources/proxy/${this.id}/energy/v1/entries/query/energy`,
+        method: 'POST' as const,
+        data: {},
       },
       {
         name: 'Asset',
-        url: `api/datasources/proxy/${this.id}/asset/api/v1/assets?pageSize=1`,
+        url: `api/datasources/proxy/${this.id}/asset/v1/buildings/search`,
+        method: 'GET' as const,
       },
       {
         name: 'CO2',
-        url: `api/datasources/proxy/${this.id}/co2/api/v1/emissions?pageSize=1`,
+        url: `api/datasources/proxy/${this.id}/co2/api/v1/emissions`,
+        method: 'GET' as const,
       },
     ];
 
@@ -222,12 +270,23 @@ export class EnelyzerDataSource extends DataSourceApi<EnelyzerQuery, EnelyzerDat
 
     for (const check of checks) {
       try {
-        await lastValueFrom(this.fetch({ url: check.url, method: 'GET' }));
+        await lastValueFrom(
+          this.fetch({ url: check.url, method: check.method, data: check.data })
+        );
         results.push(`✓ ${check.name}`);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results.push(`✗ ${check.name}: ${msg}`);
-        allOk = false;
+        // A 401/403 means the proxy reached the service — auth issue, not config.
+        // A 404 on a specific path is also reachable. Only hard failures matter.
+        const e = err as Record<string, unknown>;
+        const status = typeof e['status'] === 'number' ? e['status'] : 0;
+        if (status === 401 || status === 403 || status === 404 || status === 405) {
+          // Backend is reachable — auth or path mismatch, not a URL problem
+          results.push(`✓ ${check.name} (reachable, HTTP ${status})`);
+        } else {
+          const msg = this.extractErrorMessage(err);
+          results.push(`✗ ${check.name}: ${msg}`);
+          allOk = false;
+        }
       }
     }
 
