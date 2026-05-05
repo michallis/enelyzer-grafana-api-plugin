@@ -1,17 +1,47 @@
 version: '3.8'
 
+# Local development setup.
+#
+# Requirements:
+#   1. Build the plugin first: npm run build
+#   2. Start kftray tunnels for each Enelyzer service and note the forwarded ports.
+#   3. Update provisioning/datasources/enelyzer.yaml with the kftray-forwarded ports
+#      using http://host.docker.internal:{port} (NOT localhost — Docker containers
+#      reach the host machine via host.docker.internal).
+#   4. Run: docker-compose up
+#   5. Open http://localhost:3000 (admin / admin)
+#
+# The provisioning file pre-configures the datasource automatically.
+# If you change the base URLs, edit provisioning/datasources/enelyzer.yaml
+# and restart Grafana — no manual datasource setup needed.
+
 services:
   grafana:
-    image: grafana/grafana:11.0.0
+    image: grafana/grafana:latest
+    container_name: enelyzer-grafana-local
     ports:
-      - '3000:3000'
-    volumes:
-      - ./dist:/var/lib/grafana/plugins/enprove-enelyzer-datasource
-      - ./provisioning:/etc/grafana/provisioning
+      - "3000:3000"
     environment:
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_BASIC_ENABLED=false
-      - GF_DEFAULT_APP_MODE=development
+      # Allow loading the unsigned plugin
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=enprove-enelyzer-datasource
-    depends_on: []
+      # JWT auth — Grafana must know the Enelyzer IDP to verify and forward tokens
+      - GF_AUTH_JWT_ENABLED=true
+      - GF_AUTH_JWT_HEADER_NAME=X-JWT-Assertion
+      - GF_AUTH_JWT_USERNAME_CLAIM=preferred_username
+      - GF_AUTH_JWT_EMAIL_CLAIM=email
+      - GF_AUTH_JWT_JWK_SET_URL=https://idp.enelyzer.com/realms/Enprove/protocol/openid-connect/certs
+      # Default admin credentials
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Set to debug for troubleshooting proxy issues
+      - GF_LOG_LEVEL=info
+      - GF_DEFAULT_APP_MODE=development
+    volumes:
+      # Built plugin — run `npm run build` first; dist/img/ must be present for the logo
+      - ./dist:/var/lib/grafana/plugins/enprove-enelyzer-datasource
+      # Provisioning — auto-configures the datasource on startup
+      - ./provisioning:/etc/grafana/provisioning
+    extra_hosts:
+      # Required on Linux so containers can reach host-forwarded kftray ports.
+      # On macOS/Windows, host.docker.internal resolves automatically.
+      - "host.docker.internal:host-gateway"
