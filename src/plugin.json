@@ -26,6 +26,7 @@
     {
       "path": "energy",
       "url": "{{ .JsonData.energyEfficiencyBaseUrl }}",
+      "oauthPassThru": true,
       "headers": [
         {
           "name": "Authorization",
@@ -36,6 +37,7 @@
     {
       "path": "asset",
       "url": "{{ .JsonData.assetBaseUrl }}",
+      "oauthPassThru": true,
       "headers": [
         {
           "name": "Authorization",
@@ -46,6 +48,7 @@
     {
       "path": "co2",
       "url": "{{ .JsonData.co2BaseUrl }}",
+      "oauthPassThru": true,
       "headers": [
         {
           "name": "Authorization",
@@ -56,6 +59,7 @@
     {
       "path": "acl",
       "url": "{{ .JsonData.aclBaseUrl }}",
+      "oauthPassThru": true,
       "headers": [
         {
           "name": "Authorization",
@@ -66,6 +70,7 @@
     {
       "path": "graph",
       "url": "{{ .JsonData.graphBaseUrl }}",
+      "oauthPassThru": true,
       "headers": [
         {
           "name": "Authorization",
