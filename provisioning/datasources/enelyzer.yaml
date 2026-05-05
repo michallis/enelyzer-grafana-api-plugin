@@ -6,9 +6,23 @@ datasources:
     access: proxy
     isDefault: true
     jsonData:
-      energyEfficiencyBaseUrl: http://host.docker.internal:8081
-      assetBaseUrl: http://host.docker.internal:8082
-      co2BaseUrl: http://host.docker.internal:8083
+      # ── Service base URLs ──────────────────────────────────────────────────
+      # In-cluster (Kubernetes):
+      #   http://enelyzer-energy-efficiency-service.enelyzer.svc.cluster.local
+      # Local Docker + kftray:
+      #   http://host.docker.internal:{kftray-forwarded-port}
+      energyEfficiencyBaseUrl: http://enelyzer-energy-efficiency-service.enelyzer.svc.cluster.local
+      assetBaseUrl: http://enelyzer-asset-service.enelyzer.svc.cluster.local
+      co2BaseUrl: http://enelyzer-co2-service.enelyzer.svc.cluster.local
+      aclBaseUrl: http://enelyzer-grafana-acl-service.enelyzer.svc.cluster.local
+      graphBaseUrl: http://enelyzer-rust-graph-service.enelyzer.svc.cluster.local
+      # ── Auth ───────────────────────────────────────────────────────────────
+      # oauthPassThru: forward the logged-in user's JWT to all Enelyzer services.
+      # When true the static apiToken below is only used as a fallback
+      # (e.g. alert rules, background queries that have no user session).
+      oauthPassThru: true
       authType: bearer
     secureJsonData:
+      # Fallback bearer token — used only when oauthPassThru is true but no
+      # user token is present, or when oauthPassThru is false.
       apiToken: your-api-token-here
