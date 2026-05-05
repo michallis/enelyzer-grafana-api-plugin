@@ -57,8 +57,15 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
     <div>
       <FieldSet label="Service Base URLs">
         <Field
+          label=""
+          description="In-cluster: use http://enelyzer-*-service.enelyzer.svc.cluster.local  |  Local Docker + kftray: use http://host.docker.internal:{forwarded-port}"
+        >
+          <div />
+        </Field>
+
+        <Field
           label="Energy Efficiency Service"
-          description="Base URL of enelyzer-energy-efficiency-service (e.g. http://enelyzer-energy-efficiency-service.enelyzer.svc.cluster.local)"
+          description="enelyzer-energy-efficiency-service — handles tags, entries, activities, datasets"
         >
           <Input
             width={70}
@@ -70,7 +77,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="Asset Service"
-          description="Base URL of enelyzer-asset-service (e.g. http://enelyzer-asset-service.enelyzer.svc.cluster.local)"
+          description="enelyzer-asset-service — handles buildings and facilities"
         >
           <Input
             width={70}
@@ -82,7 +89,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="CO2 Service"
-          description="Base URL of enelyzer-co2-service (e.g. http://enelyzer-co2-service.enelyzer.svc.cluster.local)"
+          description="enelyzer-co2-service — handles emissions, factors, targets, reports"
         >
           <Input
             width={70}
@@ -94,7 +101,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="ACL / Formula Service"
-          description="Base URL of enelyzer-grafana-acl-service (e.g. http://enelyzer-grafana-acl-service.enelyzer.svc.cluster.local)"
+          description="enelyzer-grafana-acl-service — handles formula queries"
         >
           <Input
             width={70}
@@ -106,7 +113,7 @@ export function ConfigEditor({ options, onOptionsChange }: Props) {
 
         <Field
           label="Graph Service"
-          description="Base URL of enelyzer-rust-graph-service (e.g. http://enelyzer-rust-graph-service.enelyzer.svc.cluster.local)"
+          description="enelyzer-rust-graph-service — handles graph/tag hierarchy per organisation"
         >
           <Input
             width={70}
